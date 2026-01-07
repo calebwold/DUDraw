@@ -307,10 +307,13 @@
     </div>
 
     <script>
-        // Use Netlify Functions in production, local API in development
+        // API URL configuration
+        // For Netlify frontend + Render backend:
+        // Replace 'your-app-name' with your Render service name
+        const RENDER_API_URL = 'https://your-app-name.onrender.com/api';
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? 'http://localhost:5000/api' 
-            : '/.netlify/functions';
+            : RENDER_API_URL;
         const chatContainer = document.getElementById('chatContainer');
         const userInput = document.getElementById('userInput');
         const sendButton = document.getElementById('sendButton');
@@ -320,7 +323,7 @@
             try {
                 const statusUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                     ? 'http://localhost:5000/api/status'
-                    : '/.netlify/functions/status';
+                    : `${API_URL}/status`;
                 const response = await fetch(statusUrl);
                 
                 if (!response.ok) {
@@ -458,7 +461,7 @@
             try {
                 const chatUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                     ? 'http://localhost:5000/api/chat'
-                    : '/.netlify/functions/chat';
+                    : `${API_URL}/chat`;
                 const response = await fetch(chatUrl, {
                     method: 'POST',
                     headers: {
