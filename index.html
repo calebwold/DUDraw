@@ -307,7 +307,10 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000/api';
+        // Use Netlify Functions in production, local API in development
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:5000/api' 
+            : '/.netlify/functions';
         const chatContainer = document.getElementById('chatContainer');
         const userInput = document.getElementById('userInput');
         const sendButton = document.getElementById('sendButton');
@@ -315,9 +318,12 @@
         // Check API status on load
         async function checkStatus() {
             try {
-                const response = await fetch(`${API_URL}/status`);
+                const statusUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? 'http://localhost:5000/api/status'
+                    : '/.netlify/functions/status';
+                const response = await fetch(statusUrl);
                 const data = await response.json();
-                if (data.status !== 'ready') {
+                if (data.status !== 'ready' && data.status !== 'not_configured') {
                     document.getElementById('statusBox').textContent = 'Agent initialization error';
                     document.getElementById('statusBox').className = 'status-box error';
                 }
@@ -434,7 +440,10 @@
             showLoading();
 
             try {
-                const response = await fetch(`${API_URL}/chat`, {
+                const chatUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? 'http://localhost:5000/api/chat'
+                    : '/.netlify/functions/chat';
+                const response = await fetch(chatUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

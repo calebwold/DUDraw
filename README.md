@@ -44,13 +44,32 @@ The API will start on `http://localhost:5000`
 4. Click "Send" or press Enter
 5. The AI agent will generate DuDraw code for you
 
+## Deployment to Netlify
+
+This project is configured for Netlify deployment:
+
+1. **Connect your repository to Netlify:**
+   - Go to [Netlify](https://www.netlify.com/)
+   - Click "Add new site" → "Import an existing project"
+   - Connect your GitHub repository
+
+2. **Set environment variables:**
+   - In Netlify dashboard, go to Site settings → Environment variables
+   - Add `OPENAI_API_KEY` with your OpenAI API key
+
+3. **Deploy:**
+   - Netlify will automatically detect `netlify.toml` and deploy
+   - The site will be available at `https://your-site.netlify.app`
+
 ## Files
 
-- `api.py` - Flask backend API server
+- `api.py` - Flask backend API server (for local development)
+- `netlify/functions/` - Netlify serverless functions (for production)
 - `index.html` - Frontend HTML/CSS/JavaScript application
 - `du_draw_functions_data.py` - DuDraw function definitions
 - `agent_tools.py` - Tool definitions for the AI agent
-- `chroma_db/` - Vector database for function retrieval
+- `netlify.toml` - Netlify configuration
+- `chroma_db/` - Vector database for function retrieval (local only)
 
 ## Features
 
@@ -60,5 +79,6 @@ The API will start on `http://localhost:5000`
 - DU brand colors (Crimson and Gold)
 - Modern Inter font
 - Responsive design
+- Netlify serverless functions for scalable deployment
 
 
