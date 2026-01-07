@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuDraw Code Companion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --du-crimson: #C8102E;
+            --du-crimson-dark: #8B0000;
+            --du-gold: #FFB81C;
+            --du-white: #FFFFFF;
+            --du-gray: #F5F5F5;
+            --du-light-gray: #FAFAFA;
+            --du-dark-gray: #333333;
+            --du-border: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--du-white);
+            color: var(--du-dark-gray);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--du-border);
+            background: var(--du-white);
+        }
+
+        .header h1 {
+            color: var(--du-crimson);
+            font-weight: 600;
+            font-size: 1.75rem;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--du-dark-gray);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .message.user .message-bubble {
+            background-color: var(--du-crimson);
+            color: var(--du-white);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-bubble {
+            background-color: var(--du-light-gray);
+            color: var(--du-dark-gray);
+            border-bottom-left-radius: 4px;
+            border-left: 3px solid var(--du-gold);
+        }
+
+        .message.assistant.thought .message-bubble {
+            background-color: rgba(200, 16, 46, 0.05);
+            border-left-color: var(--du-crimson);
+        }
+
+        .message.assistant.tool .message-bubble {
+            background-color: rgba(255, 184, 28, 0.1);
+            border-left-color: var(--du-gold);
+        }
+
+        .message.assistant.error .message-bubble {
+            background-color: rgba(200, 16, 46, 0.1);
+            border-left-color: var(--du-crimson-dark);
+        }
+
+        .message-bubble strong {
+            color: var(--du-crimson);
+            font-weight: 600;
+        }
+
+        .message.assistant .message-bubble strong {
+            color: var(--du-crimson);
+        }
+
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border: 1px solid var(--du-border);
+        }
+
+        .input-container {
+            border-top: 1px solid var(--du-border);
+            background: var(--du-white);
+            padding: 1.5rem;
+        }
+
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--du-border);
+            border-radius: 12px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 0.95rem;
+            font-weight: 400;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--du-crimson);
+            box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.1);
+        }
+
+        .input-wrapper button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--du-crimson);
+            color: var(--du-white);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+
+        .input-wrapper button:hover {
+            background-color: var(--du-crimson-dark);
+        }
+
+        .input-wrapper button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(200, 16, 46, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--du-crimson);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: var(--du-white);
+            border-left: 1px solid var(--du-border);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            color: var(--du-crimson);
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-box {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .status-box.success {
+            background-color: rgba(200, 16, 46, 0.1);
+            border-left: 3px solid var(--du-crimson);
+            color: var(--du-dark-gray);
+        }
+
+        .status-box.info {
+            background-color: rgba(255, 184, 28, 0.1);
+            border-left: 3px solid var(--du-gold);
+            color: var(--du-dark-gray);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DuDraw Code Companion</h1>
+        <p>AI-powered code generation for DuDraw</p>
+    </div>
+
+    <div class="sidebar">
+        <h3>DuDraw Agent</h3>
+        <div class="status-box success" id="statusBox">
+            Agent initialized successfully
+        </div>
+        <div class="status-box info">
+            ChromaDB database ready for function retrieval
+        </div>
+        <div style="margin-top: 2rem;">
+            <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem;">About</h3>
+            <p style="font-size: 0.85rem; line-height: 1.6; color: var(--du-dark-gray); opacity: 0.8;">
+                This AI-powered agent helps you generate DuDraw code by understanding your natural language descriptions.
+            </p>
+            <p style="font-size: 0.85rem; line-height: 1.6; color: var(--du-dark-gray); opacity: 0.8; margin-top: 0.5rem;">
+                <strong>Features:</strong><br>
+                • Static drawings<br>
+                • Interactive games<br>
+                • Animations<br>
+                • Complex shapes
+            </p>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="message assistant">
+            <div class="message-bubble">
+                Hello! I'm your DuDraw code companion. Describe what you'd like to draw, and I'll generate the code for you.
+            </div>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <input 
+                type="text" 
+                id="userInput" 
+                placeholder="Describe what you want to draw in DuDraw..."
+                autocomplete="off"
+            >
+            <button id="sendButton" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Check API status on load
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+                if (data.status !== 'ready') {
+                    document.getElementById('statusBox').textContent = 'Agent initialization error';
+                    document.getElementById('statusBox').className = 'status-box error';
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+            }
+        }
+
+        checkStatus();
+
+        // Allow Enter key to send
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function addMessage(role, content, type = 'normal') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role} ${type}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            
+            // Format content
+            let formattedContent = content;
+            
+            // Check if content contains code blocks (multiple formats)
+            const codeBlockPatterns = [
+                /```python\n([\s\S]*?)```/g,
+                /```python([\s\S]*?)```/g,
+                /```\n([\s\S]*?)```/g,
+                /```([\s\S]*?)```/g
+            ];
+            
+            let hasCodeBlock = false;
+            for (const pattern of codeBlockPatterns) {
+                if (pattern.test(content)) {
+                    hasCodeBlock = true;
+                    break;
+                }
+            }
+            
+            if (hasCodeBlock) {
+                // Extract code blocks and explanations
+                let processedContent = content;
+                const codeMatches = [...content.matchAll(/```(?:python)?\n?([\s\S]*?)```/g)];
+                
+                if (codeMatches.length > 0) {
+                    // Replace code blocks with formatted versions
+                    codeMatches.forEach(match => {
+                        const code = match[1].trim();
+                        const codeBlock = '<div class="code-block">' + escapeHtml(code) + '</div>';
+                        processedContent = processedContent.replace(match[0], codeBlock);
+                    });
+                    
+                    // Format the rest (explanations, etc.)
+                    processedContent = processedContent
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n/g, '<br>');
+                    
+                    formattedContent = processedContent;
+                } else {
+                    formattedContent = escapeHtml(content).replace(/\n/g, '<br>');
+                }
+            } else {
+                // Format markdown-style text
+                formattedContent = escapeHtml(content)
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>');
+            }
+            
+            bubble.innerHTML = formattedContent;
+            messageDiv.appendChild(bubble);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showLoading() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            messageDiv.id = 'loadingMessage';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.innerHTML = '<div class="loading"></div>';
+            
+            messageDiv.appendChild(bubble);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage('user', message);
+            userInput.value = '';
+            sendButton.disabled = true;
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                removeLoading();
+
+                if (data.error) {
+                    addMessage('assistant', `Error: ${data.error}`, 'error');
+                } else if (data.messages) {
+                    data.messages.forEach(msg => {
+                        if (msg.role === 'assistant') {
+                            let type = 'normal';
+                            if (msg.type === 'thought') type = 'thought';
+                            else if (msg.type === 'tool_call') type = 'tool';
+                            else if (msg.type === 'error') type = 'error';
+                            else if (msg.type === 'final') type = 'normal';
+                            
+                            addMessage('assistant', msg.content, type);
+                        }
+                    });
+                }
+            } catch (error) {
+                removeLoading();
+                addMessage('assistant', `Error: ${error.message}`, 'error');
+            } finally {
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+    </script>
+</body>
+</html>
+
+
