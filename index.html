@@ -322,10 +322,26 @@
                     ? 'http://localhost:5000/api/status'
                     : '/.netlify/functions/status';
                 const response = await fetch(statusUrl);
-                const data = await response.json();
-                if (data.status !== 'ready' && data.status !== 'not_configured') {
-                    document.getElementById('statusBox').textContent = 'Agent initialization error';
-                    document.getElementById('statusBox').className = 'status-box error';
+                
+                if (!response.ok) {
+                    console.warn('Status check failed:', response.status);
+                    return;
+                }
+                
+                const responseText = await response.text();
+                if (!responseText) {
+                    console.warn('Empty status response');
+                    return;
+                }
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    if (data.status !== 'ready' && data.status !== 'not_configured') {
+                        document.getElementById('statusBox').textContent = 'Agent initialization error';
+                        document.getElementById('statusBox').className = 'status-box error';
+                    }
+                } catch (parseError) {
+                    console.warn('Status JSON parse error:', parseError);
                 }
             } catch (error) {
                 console.error('Status check failed:', error);
@@ -451,8 +467,28 @@
                     body: JSON.stringify({ message: message })
                 });
 
-                const data = await response.json();
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Get response text first to handle empty responses
+                const responseText = await response.text();
                 removeLoading();
+
+                if (!responseText) {
+                    addMessage('assistant', 'Error: Empty response from server', 'error');
+                    return;
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError, 'Response text:', responseText);
+                    addMessage('assistant', `Error parsing response: ${parseError.message}`, 'error');
+                    return;
+                }
 
                 if (data.error) {
                     addMessage('assistant', `Error: ${data.error}`, 'error');
@@ -468,9 +504,12 @@
                             addMessage('assistant', msg.content, type);
                         }
                     });
+                } else {
+                    addMessage('assistant', 'Unexpected response format from server', 'error');
                 }
             } catch (error) {
                 removeLoading();
+                console.error('Fetch error:', error);
                 addMessage('assistant', `Error: ${error.message}`, 'error');
             } finally {
                 sendButton.disabled = false;

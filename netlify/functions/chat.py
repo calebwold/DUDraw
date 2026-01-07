@@ -332,7 +332,8 @@ def handler(event, context):
     headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
     }
     
     # Handle preflight
@@ -340,7 +341,7 @@ def handler(event, context):
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': ''
+            'body': json.dumps({})
         }
     
     try:
@@ -350,15 +351,34 @@ def handler(event, context):
             return {
                 'statusCode': 500,
                 'headers': headers,
-                'body': json.dumps({"error": "OPENAI_API_KEY not configured"})
+                'body': json.dumps({"error": "OPENAI_API_KEY not configured. Please set it in Netlify environment variables."})
             }
         
         # Initialize agent if needed
         if _agent is None:
-            _agent = DuDrawAgent(api_key)
+            try:
+                _agent = DuDrawAgent(api_key)
+            except Exception as init_error:
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({"error": f"Failed to initialize agent: {str(init_error)}"})
+                }
         
         # Parse request body
-        body = json.loads(event.get('body', '{}'))
+        try:
+            body_str = event.get('body', '{}')
+            if isinstance(body_str, str):
+                body = json.loads(body_str)
+            else:
+                body = body_str
+        except json.JSONDecodeError as e:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({"error": f"Invalid JSON in request body: {str(e)}"})
+            }
+        
         user_message = body.get('message', '')
         
         if not user_message:
@@ -369,18 +389,31 @@ def handler(event, context):
             }
         
         # Run agent
-        messages = _agent.run_agent(user_message)
-        
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({"messages": messages})
-        }
+        try:
+            messages = _agent.run_agent(user_message)
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({"messages": messages}, ensure_ascii=False)
+            }
+        except Exception as agent_error:
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"Agent error: {error_trace}")
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({"error": f"Agent execution failed: {str(agent_error)}"})
+            }
     
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Handler error: {error_trace}")
         return {
             'statusCode': 500,
             'headers': headers,
-            'body': json.dumps({"error": str(e)})
+            'body': json.dumps({"error": f"Internal server error: {str(e)}"})
         }
 
