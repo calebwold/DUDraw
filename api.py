@@ -20,8 +20,15 @@ def calculate_expression(expression: str) -> str:
     except Exception as e:
         return f"Error evaluating expression '{expression}': {e}"
 
-app = Flask(__name__, static_folder='.')
-CORS(app)
+app = Flask(__name__)
+# Enable CORS for Netlify frontend
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["*"],  # Allow all origins (or specify your Netlify domain)
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # --- Configuration ---
 # Get API key from environment variable for security
