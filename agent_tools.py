@@ -1,5 +1,3 @@
-import streamlit as st 
-
 # --- Tool 2: Calculator Function ---
 def calculate_expression(expression: str) -> str:
     """Calculates the result of a mathematical expression.
@@ -8,7 +6,6 @@ def calculate_expression(expression: str) -> str:
     Returns:
         str: The result of the calculation, or an error message if invalid.
     """
-    st.write(f"**Tool: Calculator** - Calculating: `{expression}`")
     try:
         # Evaluate the expression safely using eval() or a more robust parser
         result = eval(expression)
