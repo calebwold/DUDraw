@@ -308,11 +308,11 @@
 
     <script>
         // API URL configuration
-        // Using Render for both frontend and backend
+        // Frontend on Netlify, Backend on Render
         const RENDER_API_URL = 'https://dudraw.onrender.com/api';
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? 'http://localhost:5000/api' 
-            : RENDER_API_URL;
+            : RENDER_API_URL;  // Use Render backend when deployed on Netlify
         const chatContainer = document.getElementById('chatContainer');
         const userInput = document.getElementById('userInput');
         const sendButton = document.getElementById('sendButton');

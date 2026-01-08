@@ -377,9 +377,10 @@ class DuDrawAgent:
 # Global agent instance
 agent = None
 
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
+# Removed index route - frontend is served by Netlify
+# @app.route('/')
+# def index():
+#     return send_from_directory('.', 'index.html')
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
